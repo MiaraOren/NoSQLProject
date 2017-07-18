@@ -6,15 +6,6 @@ cols = {'id': 0, 'suburb': 1, 'adress': 2, 'rooms': 3, 'type': 4, 'price': 5, 'm
         'bed': 11, 'bath': 12, 'car': 13, 'landsize': 14, 'buildingarea': 15, 'yearbuilt': 16, 'councilarea':17, 'latitude': 18, 'longitude':19,
         'regionname': 20, 'propertycount': 21}
 
-config = {
-    "apiKey": "AIzaSyAclxBg-zI93uw7YjfjULQi0P53J1sPMdo",
-    "authDomain": "afekaprojectnosql.firebaseapp.com",
-    "databaseURL": "https://afekaprojectnosql.firebaseio.com",
-    "projectId": "afekaprojectnosql",
-    "storageBucket": "afekaprojectnosql.appspot.com",
-    "messagingSenderId": "89491943270"
-}
-
 
 class DataBase:
 
