@@ -16,20 +16,19 @@ def main(args):
     """
 
     # Connecting Fire-Base
-    #data_base = DBH.DataBase(user, password)
+    data_base = DBH.DataBase(user, password)
 
     # Reading the Cleaned data
-    #data_set = DSH.DataCleaner(filename)
+    data_set = DSH.DataCleaner(filename)
 
     # Creating dictionary of columns from Header
-    #data_set.create_header_dict()
+    data_set.create_header_dict()
 
-    # Creating Array of Houses ( array of class
+    # Creating Array of Houses ( array of class Melbourne... )
     #data_set.create_house_array_from_dataset()
 
     '''
         Operations By User
-    '''
     '''
 
     ops = {'create': data_base.database_ops(data=data_set.house_array, op='create'),
@@ -38,9 +37,12 @@ def main(args):
            'create_room': data_base.database_ops(data=data_set.data, op='create_room'),
            'create_price': data_base.database_ops(data=data_set.data, op='create_price'),
            'create_year': data_base.database_ops(data=data_set.data, op='create_year'),
+           'create_landsize': data_base.database_ops(data=data_set.data, op='create_landsize'),
+           'create_buildingarea': data_base.database_ops(data=data_set.data, op='create_buildingarea'),
+           'create_seller': data_base.database_ops(data=data_set.data, op='create_seller'),
            'num_of_houses': data_base.database_ops(op='num_of_houses')
            }
-    '''
+
     '''
         Queries By User
     '''
@@ -50,10 +52,7 @@ def main(args):
         Actions By User
     '''
 
-    #ops['create_room']('bed')
-    #ops['create_room']('bath')
-    #ops['create_year']()
-
+    #ops['create_seller']()
 
 
 if __name__ == '__main__':
