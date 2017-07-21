@@ -33,7 +33,6 @@ class DataBase:
 
     def database_ops(self, data=None, op=''):
 
-
         def divide_prize(d):
 
             prices = [data.iloc[x, cols['price']] for x in range(data.shape[0]) if data.iloc[x, cols['price']] > -1]
@@ -59,6 +58,45 @@ class DataBase:
                     new_d[q3+1] += ids
 
             return int(q1), int(q2), int(q3), new_d
+
+        def divide_by(col, n=4):
+
+            d = make_dict(col)
+
+            values = [data.iloc[x, col] for x in range(data.shape[0]) if data.iloc[x, col] > -1]
+            n_values = sorted(set(values))
+
+            l = [int(n_values[x]) for x in range(0, len(n_values), int(np.floor(len(n_values)/n)))]
+            range_dict = {k: v for k, v in zip([str(l[x]) + '-' + str(l[x+1]) for x in range(len(l)-1)], np.repeat('', len(l)))}
+            range_dict[str(l[-1])+'>'] = ''
+            range_dict['-1'] = ''
+
+            for size, ids in d.items():
+                for range_ in range_dict.keys():
+                    size = int(size)
+
+                    if size == -1 or size == 0:
+                        if range_dict['-1'] == '':
+                            range_dict['-1'] += ids
+                        else:
+                            range_dict['-1'] += ',' + ids
+                        break
+
+                    if len(str.split(range_, '-')) == 1:
+                        if range_dict[range_] == '':
+                            range_dict[range_] += ids
+                        else:
+                            range_dict[range_] += ',' + ids
+                        break
+
+                    if int(size) < max(np.int32(str.split(range_, '-'))):
+                        if range_dict[range_] == '':
+                            range_dict[range_] += ids
+                        else:
+                            range_dict[range_] += ',' + ids
+                        break
+
+            return range_dict
 
         def make_dict_adv(col, f=None):
             d = {}
@@ -137,17 +175,28 @@ class DataBase:
 
             for year, ids_y in d_year.items():
                 for month, ids_m in d_month.items():
-                    temp = np.intersect1d(str.split(ids_y, ","), str.split(ids_m, ","))
-                    self.fb.database().child('year').child(str(year)).child(str(month)).push(dict(temp), self.user['idToken'])
+                    temp = str.join(',', np.intersect1d(str.split(ids_y, ","), str.split(ids_m, ",")))
+                    self.fb.database().child('year').child(str(year)).child(str(month)).push(temp, self.user['idToken'])
 
-        def create_land_size():
-            pass
+        def create_land_size(n):
 
-        def create_building_area():
-            pass
+            land_sizes = divide_by(cols['landsize'], n)
+            for size, ids in land_sizes.items():
+                self.fb.database().child('landsize').child(size).push(ids, self.user['idToken'])
+
+        def create_building_area(n):
+
+            building_area = divide_by(cols['buildingarea'], n)
+            for size, ids in building_area.items():
+                self.fb.database().child('buildingarea').child(size).push(ids, self.user['idToken'])
 
         def create_seller():
-            pass
+
+            d = make_dict(cols['SellerG'])
+            for seller, ids in d.items():
+                print(seller)
+                #self.fb.database().child('SellerG').child(str(seller)).push(ids, self.user['idToken'])
+
 
         def create_full_houses():
             if data is None:
@@ -174,7 +223,10 @@ class DataBase:
                'create_room': create_rooms,
                'create_price': create_price,
                'create_year': create_year_sold,
+               'create_landsize': create_land_size,
+               'create_buildingarea': create_building_area,
                'num_of_houses': get_num_of_houses,
+               'create_seller': create_seller,
                'cs': create_suberb}
 
         if op not in ops:
