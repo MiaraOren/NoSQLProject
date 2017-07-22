@@ -35,18 +35,20 @@ class DataBase:
             pricesDict = {-1: '-1',644000: '0-644000', 1017000: '644000-1017000', 1682000: '1017000-1682000', 1682001: '1682000'}
             allpricesStr = ['-1','0-644000', '644000-1017000', '1017000-1682000', '1682000']
             pricesListForQuery = []
+            find_by = 'price '
 
             #price less than amount
             if (comparator == -1):
-
+                find_by+'less than '+str(amount)
                 for p in pricesDict:
-                #     print(id)
+                    # print(p)
                 # for p in int(allPricesRange):
                     if (int(p) < int(amount)):
                         pricesListForQuery.append(pricesDict.get(p))
 
             # price more than amount
             if (comparator == 1):
+                find_by + 'more than ' + str(amount)
                 for p in pricesDict:
                 # for p in int(allPricesRange):
                     if (int(p) > int(amount)):
@@ -69,67 +71,131 @@ class DataBase:
 
 
             time1 = time()
-            print('time to get prices ' , time1-time0)
+            # print('time to get prices ' , time1-time0)
             house_ids = []
-            for id in str(house_ids_by_price.val().values().__iter__().__next__()).split(","):
-                print(id)
+            i = 0
+            for id in str(listOfResults.__getitem__(i).val().values().__iter__().__next__()).split(","):
+                # print(id)
+                i = i+1
                 house_ids.append(id)
 
 
 
-            get_houses_by_id(house_ids)
+            get_houses_by_id(house_ids,time1-time0,find_by )
 
 
         def get_by_type(type):
+            houses = []
             time0 = time()
-            house_ids_by_type = self.fb.database().child('type').get(self.user['idToken'])
+            house_ids_by_type = self.fb.database().child('type').child(type).get(self.user['idToken'])
             time1 = time()
             print('time to get type ', time1 - time0)
             for id in str(house_ids_by_type.val().values().__iter__().__next__()).split(","):
-                print(id)
+                # print(id)
+                houses.append(id)
+            get_houses_by_id(houses)
 
-        def get_by_rooms(number_of_rooms):
+        def get_by_seller(type):
+            houses = []
             time0 = time()
-            house_ids_by_rooms = self.fb.database().child('rooms').get(self.user['idToken'])
+            house_ids_by_type = self.fb.database().child('type').child(type).get(self.user['idToken'])
+            time1 = time()
+            print('time to get type ', time1 - time0)
+            for id in str(house_ids_by_type.val().values().__iter__().__next__()).split(","):
+                # print(id)
+                houses.append(id)
+            get_houses_by_id(houses)
+
+        def get_by_rooms(room_type, number_of_rooms):
+            houses = []
+            time0 = time()
+            house_ids_by_rooms = self.fb.database().child('rooms').child(room_type).child(number_of_rooms).get(self.user['idToken'])
             time1 = time()
             print('time to get rooms ', time1 - time0)
             for id in str(house_ids_by_rooms.val().values().__iter__().__next__()).split(","):
-                print(id)
+                # print(id)
+                houses.append(id)
+            get_houses_by_id(houses)
 
-        def get_houses_by_id(ids):
-            # h1 = ids.each()
-            # h2 = ids.key()
-            # h3 = ids.__getitem__(0).pyres(0).item.val()
-            # h4 = ids.val()
+        def get_by_year(year, month):
+            houses = []
+            time0 = time()
+            house_ids_by_year = self.fb.database().child('years').child(year).child(month).get(self.user['idToken'])
+            time1 = time()
+            print('time to get rooms by year', time1 - time0)
+            for id in str(house_ids_by_year.val().values().__iter__().__next__()).split(","):
+                # print(id)
+                houses.append(id)
 
+        def get_all_houses():
             house = []
             houses = []
 
             time0 = time()
-            for id in ids:
-                houses_by_id =  self.fb.database().child('houses').child(id).get(self.user['idToken'])
+
+            houses_by_id = self.fb.database().child('houses').get(self.user['idToken'])
+
+            for h in str(houses_by_id.val().__iter__().__next__()).split(","):
+                    # print(h)
+                house.append(h)
+
+                # houses.append(houses_by_id.val.values())
+            houses.append(house)
+            print("Houses size=" + str(houses.__len__()) + "  " + str(house))
+            house = []
+            time1 = time()
+            print('time to get all houses ', time1 - time0)
+            print('Found %d results', len(houses))
+
+        def get_houses_by_id(ids, query_time, find_by):
+            house = []
+            houses = []
+
+            time0 = time()
+            # print('Number of found houses ', len(ids))
+            for house_id in ids:
+                houses_by_id = self.fb.database().child('houses').child(house_id).get(self.user['idToken'])
 
                 for h in str(houses_by_id.val().values().__iter__().__next__()).split(","):
-                    # print(h)
                     house.append(h)
 
                 # houses.append(houses_by_id.val.values())
                 houses.append(house)
-                print(houses)
+                print("Houses size=" + str(houses.__len__()) +"  " + str(house))
+                house=[]
             time1 = time()
-            print('time to get houses ', time1 - time0)
+
+            print_query_result(find_by, query_time+(time1 - time0), houses, len(houses))
+            # print('time to get houses ', time1 - time0)
+            # print('Found %d results', len(houses))
             #
-            return  houses
+            return houses
 
 
 
         queries = {'get_by_suberb': get_by_suberb,
-                   'get_by_price' : get_by_price}
+                   'get_by_price' : get_by_price,
+                   'get_by_year'  : get_by_year,
+                   'get_by_rooms': get_by_rooms,
+                   'get_by_type': get_by_type,
+                   'get_by_seller': get_by_seller,
+                   'get_all_houses':get_all_houses
+                   }
 
         return queries[query]
 
-    def database_ops(self, data=None, op=''):
 
+
+        def print_query_result(self, findBy="", time=0, results=[], number_of_found_houses=0):
+            print('##################################')
+            print('Find house by params ' + findBy)
+            print('Found %d results', number_of_found_houses)
+            print('Elapsed time %d', time)
+            print('##################################')
+
+
+
+    def database_ops(self, data=None, op=''):
 
         def divide_prize(d):
 
@@ -156,6 +222,45 @@ class DataBase:
                     new_d[q3+1] += ids
 
             return int(q1), int(q2), int(q3), new_d
+
+        def divide_by(col, n=4):
+
+            d = make_dict(col)
+
+            values = [data.iloc[x, col] for x in range(data.shape[0]) if data.iloc[x, col] > -1]
+            n_values = sorted(set(values))
+
+            l = [int(n_values[x]) for x in range(0, len(n_values), int(np.floor(len(n_values)/n)))]
+            range_dict = {k: v for k, v in zip([str(l[x]) + '-' + str(l[x+1]) for x in range(len(l)-1)], np.repeat('', len(l)))}
+            range_dict[str(l[-1])+'>'] = ''
+            range_dict['-1'] = ''
+
+            for size, ids in d.items():
+                for range_ in range_dict.keys():
+                    size = int(size)
+
+                    if size == -1 or size == 0:
+                        if range_dict['-1'] == '':
+                            range_dict['-1'] += ids
+                        else:
+                            range_dict['-1'] += ',' + ids
+                        break
+
+                    if len(str.split(range_, '-')) == 1:
+                        if range_dict[range_] == '':
+                            range_dict[range_] += ids
+                        else:
+                            range_dict[range_] += ',' + ids
+                        break
+
+                    if int(size) < max(np.int32(str.split(range_, '-'))):
+                        if range_dict[range_] == '':
+                            range_dict[range_] += ids
+                        else:
+                            range_dict[range_] += ',' + ids
+                        break
+
+            return range_dict
 
         def make_dict_adv(col, f=None):
             d = {}
@@ -234,17 +339,28 @@ class DataBase:
 
             for year, ids_y in d_year.items():
                 for month, ids_m in d_month.items():
-                    temp = np.intersect1d(str.split(ids_y, ","), str.split(ids_m, ","))
-                    self.fb.database().child('year').child(str(year)).child(str(month)).push(dict(temp), self.user['idToken'])
+                    temp = str.join(',', np.intersect1d(str.split(ids_y, ","), str.split(ids_m, ",")))
+                    self.fb.database().child('year').child(str(year)).child(str(month)).push(temp, self.user['idToken'])
 
-        def create_land_size():
-            pass
+        def create_land_size(n):
 
-        def create_building_area():
-            pass
+            land_sizes = divide_by(cols['landsize'], n)
+            for size, ids in land_sizes.items():
+                self.fb.database().child('landsize').child(size).push(ids, self.user['idToken'])
+
+        def create_building_area(n):
+
+            building_area = divide_by(cols['buildingarea'], n)
+            for size, ids in building_area.items():
+                self.fb.database().child('buildingarea').child(size).push(ids, self.user['idToken'])
 
         def create_seller():
-            pass
+
+            d = make_dict(cols['SellerG'])
+            for seller, ids in d.items():
+                print(seller)
+                #self.fb.database().child('SellerG').child(str(seller)).push(ids, self.user['idToken'])
+
 
         def create_full_houses():
             if data is None:
@@ -271,7 +387,10 @@ class DataBase:
                'create_room': create_rooms,
                'create_price': create_price,
                'create_year': create_year_sold,
+               'create_landsize': create_land_size,
+               'create_buildingarea': create_building_area,
                'num_of_houses': get_num_of_houses,
+               'create_seller': create_seller,
                'cs': create_suberb}
 
         if op not in ops:
