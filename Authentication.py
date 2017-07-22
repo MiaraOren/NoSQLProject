@@ -65,7 +65,7 @@ def main(args):
                 'What would you like to do? \n '
                 '0 - Find house with multiple filters\n'
                 '1 - Find house by price\n '
-                '2 - Find house by region \n '
+                '2 - Find house by seller \n '
                 '3 - Find house by number of rooms \n '
                 '4 - Find house by year \n '
                 '5 - Find house by type \n '
@@ -73,11 +73,11 @@ def main(args):
                 '7 - Exit \n')
             v = 'ten'
             if (choice == '0'):
-                pass
+                print('not implemented')
             elif (choice == '1'):
                 find_house_by_price();
             elif (choice == '2'):
-                find_house_by_suberb();
+                find_house_by_seller();
             elif (choice == '3'):
                 find_house_by_rooms();
             elif (choice == '4'):
@@ -126,6 +126,17 @@ def main(args):
 
     def find_house_by_suberb(self=None):
         pass
+
+    def find_house_by_seller(self=None):
+        input_required = True;
+        while (input_required):
+            seller = input('Choose one of the sellers 1 - Barry, 2 - Greg, 3 - Nelson, 4 - Ray ')
+
+            if (seller == '1' or seller == '2' or seller == '3' or seller == '4'):
+                queries['get_by_seller'](seller)
+                input_required = False
+            else:
+                print('Invalid input, please try again \n')
 
     def find_house_by_type(self=None):
         input_required = True;

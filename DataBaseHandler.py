@@ -74,17 +74,17 @@ class DataBase:
             # print('time to get prices ' , time1-time0)
             house_ids = []
             i = 0
-            for id in str(listOfResults.__getitem__(i).val().values().__iter__().__next__()).split(","):
-                # print(id)
-                i = i+1
-                house_ids.append(id)
-
-
+            if (len(listOfResults) > 0):
+                for id in str(listOfResults.__getitem__(i).val().values().__iter__().__next__()).split(","):
+                    # print(id)
+                    i = i+1
+                    house_ids.append(id)
 
             get_houses_by_id(house_ids,time1-time0,find_by )
 
 
         def get_by_type(type):
+            find_by = 'type ' + type
             houses = []
             time0 = time()
             house_ids_by_type = self.fb.database().child('type').child(type).get(self.user['idToken'])
@@ -93,20 +93,24 @@ class DataBase:
             for id in str(house_ids_by_type.val().values().__iter__().__next__()).split(","):
                 # print(id)
                 houses.append(id)
-            get_houses_by_id(houses)
+            get_houses_by_id(houses, time1 - time0, find_by)
+            # print_query_result(find_by, time1 - time0, houses, len(houses))
 
-        def get_by_seller(type):
+        def get_by_seller(seller):
+            find_by = 'sellen name ' + seller
             houses = []
             time0 = time()
-            house_ids_by_type = self.fb.database().child('type').child(type).get(self.user['idToken'])
+            house_ids_by_type = self.fb.database().child('SellersG').child(seller).get(self.user['idToken'])
             time1 = time()
             print('time to get type ', time1 - time0)
             for id in str(house_ids_by_type.val().values().__iter__().__next__()).split(","):
                 # print(id)
                 houses.append(id)
-            get_houses_by_id(houses)
+            get_houses_by_id(houses, time1-time0, find_by)
+            # print_query_result(find_by, time1 - time0, houses, len(houses))
 
         def get_by_rooms(room_type, number_of_rooms):
+            find_by = 'room type ' + str(room_type) + ' ,number of rooms ' + str(number_of_rooms)
             houses = []
             time0 = time()
             house_ids_by_rooms = self.fb.database().child('rooms').child(room_type).child(number_of_rooms).get(self.user['idToken'])
@@ -115,19 +119,53 @@ class DataBase:
             for id in str(house_ids_by_rooms.val().values().__iter__().__next__()).split(","):
                 # print(id)
                 houses.append(id)
-            get_houses_by_id(houses)
+            # get_houses_by_id(houses)
+            get_houses_by_id(houses, time1 - time0, find_by)
+            # print_query_result(find_by, time1-time0, houses, len(houses))
 
-        def get_by_year(year, month):
+        def get_by_seller(seller_number):
+            sellers = ['Barry','Greg','Nelson','Ray']
+            seller = sellers.__getitem__(int(seller_number)-1)
+            find_by = 'seller ' + str(seller)
             houses = []
             time0 = time()
-            house_ids_by_year = self.fb.database().child('years').child(year).child(month).get(self.user['idToken'])
+            house_ids_by_seller = self.fb.database().child('SellerG').child(seller).get(self.user['idToken'])
             time1 = time()
-            print('time to get rooms by year', time1 - time0)
-            for id in str(house_ids_by_year.val().values().__iter__().__next__()).split(","):
-                # print(id)
+            print('time to get by seller ', time1 - time0)
+
+            for id in str(house_ids_by_seller.val().values().__iter__().__next__()).split(","):
                 houses.append(id)
+            print('found ' + str(len(houses)) + ' ids')
+            get_houses_by_id(houses, time1 - time0, find_by)
+
+
+
+        def print_query_result(find_by="", elapsed_time=0, results=[], number_of_found_houses=0):
+            print('###############################################################')
+            print('Find house by params ' + find_by)
+            print('Found ' + str(number_of_found_houses) + ' results')
+            print('Elapsed time ' + str(elapsed_time))
+            print('###############################################################')
+
+        def get_by_year(year, month):
+            find_by = 'year '+ year + ' month ' + month
+            houses = []
+            time0 = time()
+            house_ids_by_year = self.fb.database().child('year').child(year).child(month).get(self.user['idToken'])
+            time1 = time()
+            time3 = time1 - time0
+            print('time to get rooms by year', time1 - time0)
+            if house_ids_by_year.pyres is None:
+                # print_query_result(find_by, time3)
+                pass
+            else:
+                for id in str(house_ids_by_year.val().values().__iter__().__next__()).split(","):
+                    houses.append(id)
+                get_houses_by_id(houses, time1 - time0, find_by)
+                # print_query_result(find_by, time3, houses, len(houses))
 
         def get_all_houses():
+            find_by = 'get all houses'
             house = []
             houses = []
 
@@ -141,11 +179,13 @@ class DataBase:
 
                 # houses.append(houses_by_id.val.values())
             houses.append(house)
-            print("Houses size=" + str(houses.__len__()) + "  " + str(house))
+            # print("Houses size=" + str(houses.__len__()) + "  " + str(house))
             house = []
             time1 = time()
-            print('time to get all houses ', time1 - time0)
-            print('Found %d results', len(houses))
+            # get_houses_by_id(houses, time1 - time0, find_by)
+            print_query_result(find_by,time1-time0, houses, len(houses))
+            # print('time to get all houses ', time1 - time0)
+            # print('Found %d results', len(houses))
 
         def get_houses_by_id(ids, query_time, find_by):
             house = []
@@ -155,17 +195,19 @@ class DataBase:
             # print('Number of found houses ', len(ids))
             for house_id in ids:
                 houses_by_id = self.fb.database().child('houses').child(house_id).get(self.user['idToken'])
-
-                for h in str(houses_by_id.val().values().__iter__().__next__()).split(","):
-                    house.append(h)
+                if houses_by_id.pyres is not None:
+                    for h in str(houses_by_id.val().values().__iter__().__next__()).split(","):
+                        house.append(h)
 
                 # houses.append(houses_by_id.val.values())
-                houses.append(house)
-                print("Houses size=" + str(houses.__len__()) +"  " + str(house))
-                house=[]
+                    houses.append(house)
+                    # print("Houses size=" + str(houses.__len__()) +"  " + str(house))
+                    house=[]
+                else:
+                    print('house is None')
             time1 = time()
 
-            print_query_result(find_by, query_time+(time1 - time0), houses, len(houses))
+            print_query_result(find_by, query_time + (time1 - time0), houses, len(houses))
             # print('time to get houses ', time1 - time0)
             # print('Found %d results', len(houses))
             #
@@ -179,19 +221,13 @@ class DataBase:
                    'get_by_rooms': get_by_rooms,
                    'get_by_type': get_by_type,
                    'get_by_seller': get_by_seller,
-                   'get_all_houses':get_all_houses
+                   'get_all_houses':get_all_houses,
+                   'print_query_result': print_query_result,
                    }
 
         return queries[query]
 
 
-
-        def print_query_result(self, findBy="", time=0, results=[], number_of_found_houses=0):
-            print('##################################')
-            print('Find house by params ' + findBy)
-            print('Found %d results', number_of_found_houses)
-            print('Elapsed time %d', time)
-            print('##################################')
 
 
 
