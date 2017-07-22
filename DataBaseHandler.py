@@ -1,6 +1,7 @@
 import pyrebase
 import DataSetHandler as DSH
 import numpy as np
+from time import time
 from NoSQLKey import config
 
 cols = {'id': 0, 'suburb': 1, 'adress': 2, 'rooms': 3, 'type': 4, 'price': 5, 'method': 6, 'SellerG': 7, 'Date': 8, 'Distance': 9, 'postcode': 10,
@@ -20,14 +21,110 @@ class DataBase:
 
     def database_queries(self, query=''):
 
-        def get_suberb():
+        def get_by_suberb():
 
-            temp = self.fb.database().child('suberb').child('Abbotsford').get(self.user['idToken'])
+            temp = self.fb.database().child('zina').get(self.user['idToken'])
 
             for id in str(temp.val().values().__iter__().__next__()).split(","):
                 print(int(id))
 
-        queries = {'get_suberb': get_suberb}
+
+
+        def get_by_price(comparator, amount):
+            allPricesRange = [-1, 644000,1017000, 1682000 ]
+            pricesDict = {-1: '-1',644000: '0-644000', 1017000: '644000-1017000', 1682000: '1017000-1682000', 1682001: '1682000'}
+            allpricesStr = ['-1','0-644000', '644000-1017000', '1017000-1682000', '1682000']
+            pricesListForQuery = []
+
+            #price less than amount
+            if (comparator == -1):
+
+                for p in pricesDict:
+                #     print(id)
+                # for p in int(allPricesRange):
+                    if (int(p) < int(amount)):
+                        pricesListForQuery.append(pricesDict.get(p))
+
+            # price more than amount
+            if (comparator == 1):
+                for p in pricesDict:
+                # for p in int(allPricesRange):
+                    if (int(p) > int(amount)):
+                        pricesListForQuery.append(pricesDict.get(p))
+
+            if (comparator == 0):
+                pricesListForQuery = allPricesRange
+
+
+            listOfResults = []
+
+            time0 = time()
+
+
+            # house_ids_by_price = self.fb.database().child('price').get(self.user['idToken'])
+            for price in pricesListForQuery:
+                house_ids_by_price = self.fb.database().child('price').child(price).get(self.user['idToken'])
+                listOfResults.append(house_ids_by_price)
+
+
+
+            time1 = time()
+            print('time to get prices ' , time1-time0)
+            house_ids = []
+            for id in str(house_ids_by_price.val().values().__iter__().__next__()).split(","):
+                print(id)
+                house_ids.append(id)
+
+
+
+            get_houses_by_id(house_ids)
+
+
+        def get_by_type(type):
+            time0 = time()
+            house_ids_by_type = self.fb.database().child('type').get(self.user['idToken'])
+            time1 = time()
+            print('time to get type ', time1 - time0)
+            for id in str(house_ids_by_type.val().values().__iter__().__next__()).split(","):
+                print(id)
+
+        def get_by_rooms(number_of_rooms):
+            time0 = time()
+            house_ids_by_rooms = self.fb.database().child('rooms').get(self.user['idToken'])
+            time1 = time()
+            print('time to get rooms ', time1 - time0)
+            for id in str(house_ids_by_rooms.val().values().__iter__().__next__()).split(","):
+                print(id)
+
+        def get_houses_by_id(ids):
+            # h1 = ids.each()
+            # h2 = ids.key()
+            # h3 = ids.__getitem__(0).pyres(0).item.val()
+            # h4 = ids.val()
+
+            house = []
+            houses = []
+
+            time0 = time()
+            for id in ids:
+                houses_by_id =  self.fb.database().child('houses').child(id).get(self.user['idToken'])
+
+                for h in str(houses_by_id.val().values().__iter__().__next__()).split(","):
+                    # print(h)
+                    house.append(h)
+
+                # houses.append(houses_by_id.val.values())
+                houses.append(house)
+                print(houses)
+            time1 = time()
+            print('time to get houses ', time1 - time0)
+            #
+            return  houses
+
+
+
+        queries = {'get_by_suberb': get_by_suberb,
+                   'get_by_price' : get_by_price}
 
         return queries[query]
 
