@@ -3,10 +3,17 @@ import DataSetHandler as DSH
 import numpy as np
 from time import time
 from NoSQLKey import config
-
+import matplotlib.pyplot as plt
+import pandas as pd
 cols = {'id': 0, 'suburb': 1, 'adress': 2, 'rooms': 3, 'type': 4, 'price': 5, 'method': 6, 'SellerG': 7, 'Date': 8, 'Distance': 9, 'postcode': 10,
         'bed': 11, 'bath': 12, 'car': 13, 'landsize': 14, 'buildingarea': 15, 'yearbuilt': 16, 'councilarea':17, 'latitude': 18, 'longitude':19,
         'regionname': 20, 'propertycount': 21}
+
+
+price_benchmark_10 = []
+price_benchmark_100 = []
+price_benchmark_1000 = []
+price_benchmark_1 = []
 
 
 class DataBase:
@@ -28,33 +35,30 @@ class DataBase:
             for id in str(temp.val().values().__iter__().__next__()).split(","):
                 print(int(id))
 
-
-
-        def get_by_price(comparator, amount):
-            allPricesRange = [-1, 644000,1017000, 1682000 ]
+        def get_by_price(comparator, amount, batch=1):
+            allPricesRange = [-1, 644000,1017000, 1682000]
             pricesDict = {-1: '-1',644000: '0-644000', 1017000: '644000-1017000', 1682000: '1017000-1682000', 1682001: '1682000'}
             allpricesStr = ['-1','0-644000', '644000-1017000', '1017000-1682000', '1682000']
             pricesListForQuery = []
             find_by = 'price '
 
-            #price less than amount
-            if (comparator == -1):
+            # price less than amount
+            if comparator == -1:
                 find_by+'less than '+str(amount)
                 for p in pricesDict:
-                    # print(p)
                 # for p in int(allPricesRange):
-                    if (int(p) < int(amount)):
+                    if (int(p) < int(amount) and int(p) != -1):
                         pricesListForQuery.append(pricesDict.get(p))
 
             # price more than amount
-            if (comparator == 1):
+            if comparator == 1:
                 find_by + 'more than ' + str(amount)
                 for p in pricesDict:
                 # for p in int(allPricesRange):
                     if (int(p) > int(amount)):
                         pricesListForQuery.append(pricesDict.get(p))
 
-            if (comparator == 0):
+            if comparator == 0:
                 pricesListForQuery = allPricesRange
 
 
@@ -76,12 +80,32 @@ class DataBase:
             i = 0
             if (len(listOfResults) > 0):
                 for id in str(listOfResults.__getitem__(i).val().values().__iter__().__next__()).split(","):
-                    # print(id)
+                    #print(id)
                     i = i+1
                     house_ids.append(id)
 
-            get_houses_by_id(house_ids,time1-time0,find_by )
+            counter = 0
+            for n in range(0, len(house_ids), batch):
 
+                if counter > 100:
+                    break
+
+                t, houses = get_houses_by_id(house_ids[n:n+batch], time1-time0, find_by)
+                price_benchmark_1000.append(t)
+                counter += 1
+
+                '''
+                    keep = input("Show next batch ( Y/N ): ")
+                    if keep.upper() != 'Y':
+                        break
+                '''
+
+            plt.plot(price_benchmark_1000, 'bo')
+            plt.plot(price_benchmark_1000, 'r--')
+            plt.title('price_benchmark_1')
+            plt.xlabel('iterations')
+            plt.ylabel('query time (s)')
+            plt.show()
 
         def get_by_type(type):
             find_by = 'type ' + type
@@ -183,7 +207,7 @@ class DataBase:
             house = []
             time1 = time()
             # get_houses_by_id(houses, time1 - time0, find_by)
-            print_query_result(find_by,time1-time0, houses, len(houses))
+            print_query_result(find_by, time1-time0, houses, len(houses))
             # print('time to get all houses ', time1 - time0)
             # print('Found %d results', len(houses))
 
@@ -202,16 +226,16 @@ class DataBase:
                 # houses.append(houses_by_id.val.values())
                     houses.append(house)
                     # print("Houses size=" + str(houses.__len__()) +"  " + str(house))
-                    house=[]
+                    house = []
                 else:
                     print('house is None')
             time1 = time()
-
-            print_query_result(find_by, query_time + (time1 - time0), houses, len(houses))
+            total_time = query_time + (time1 - time0)
+            print_query_result(find_by, total_time, houses, len(houses))
             # print('time to get houses ', time1 - time0)
             # print('Found %d results', len(houses))
             #
-            return houses
+            return total_time, houses
 
 
 
@@ -226,7 +250,6 @@ class DataBase:
                    }
 
         return queries[query]
-
 
 
 
@@ -397,7 +420,6 @@ class DataBase:
                 print(seller)
                 #self.fb.database().child('SellerG').child(str(seller)).push(ids, self.user['idToken'])
 
-
         def create_full_houses():
             if data is None:
                 error('d')
@@ -409,6 +431,27 @@ class DataBase:
             houses = self.fb.database().child('houses').get(self.user['idToken'])
             print(len(houses.val())-1)
 
+        def test():
+
+            d = {}
+            l = []
+
+            for id in range(data.shape[0]):
+                for k, v in cols.items():
+                    if v == 0:
+                        d[k] = str(id)
+                    else:
+                        d[k] = str(data.iloc[id, v])
+
+                l.append(d)
+                d = {}
+
+            t0 = time()
+            self.fb.database().child("FULL_HOUSE").push(l, self.user['idToken'])
+            t1 = time()
+
+            print("Time ", t1-t0 )
+
         def error(e):
             if e == '':
                 raise "Error - must choose a function\n'c' for create all houses\n'n' to get number of houses in db"
@@ -418,6 +461,7 @@ class DataBase:
                 raise 'Invalid function type'
 
         ops = {'': error,
+               'test': test,
                'create': create_full_houses,
                'create_type': create_type,
                'create_room': create_rooms,

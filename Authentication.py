@@ -16,7 +16,6 @@ def main(args):
         Initiate Connecting to Fire base and restart dataset
     """
 
-
     # Connecting Fire-Base
     data_base = DBH.DataBase(user, password)
 
@@ -92,7 +91,6 @@ def main(args):
             else:
                 print('Invalid input, please try again \n')
 
-
     def find_house_by_price(self=None):
         input_required = True;
         while (input_required):
@@ -164,14 +162,15 @@ def main(args):
             else:
                 print('Invalid input, please try again \n')
 
-
     def find_all_houses(self=None):
         queries['get_all_houses']()
 
 
-
+    '''
+        Main Menu Functions
+    '''
     print_main_menu()
-
+    #data_base.database_ops(data=data_set.data, op='test')()
     # Reading the Cleaned data
     #data_set = DSH.DataCleaner(filename)
 
